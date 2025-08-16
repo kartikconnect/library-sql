@@ -4,7 +4,7 @@ FROM loans l
 JOIN members m ON m.id = l.member_id
 JOIN books b ON b.id = l.book_id
 WHERE l.return_date IS NULL
-  AND date(l.due_date) < date('now')
+AND date(l.due_date) < date('now')
 ORDER BY date(l.due_date);
 
 -- Most borrowed authors (top 5)
@@ -18,8 +18,8 @@ LIMIT 5;
 
 -- Member activity summary
 SELECT m.full_name,
-       COUNT(*) AS total_loans,
-       SUM(CASE WHEN l.return_date IS NULL THEN 1 ELSE 0 END) AS active_loans
+COUNT(l.id) AS total_loans,
+SUM(CASE WHEN l.return_date IS NULL THEN 1 ELSE 0 END) AS active_loans
 FROM members m
 LEFT JOIN loans l ON l.member_id = m.id
 GROUP BY m.full_name
@@ -31,3 +31,34 @@ FROM books b
 LEFT JOIN loans l ON l.book_id = b.id
 WHERE l.id IS NULL
 ORDER BY b.title;
+
+-- Views to simplify common reports
+CREATE VIEW IF NOT EXISTS view_overdue_loans AS
+SELECT m.full_name, b.title, l.due_date
+FROM loans l
+JOIN members m ON m.id = l.member_id
+JOIN books b ON b.id = l.book_id
+WHERE l.return_date IS NULL
+AND date(l.due_date) < date('now');
+
+CREATE VIEW IF NOT EXISTS view_member_activity AS
+SELECT m.full_name,
+COUNT(l.id) AS total_loans,
+SUM(CASE WHEN l.return_date IS NULL THEN 1 ELSE 0 END) AS active_loans
+FROM members m
+LEFT JOIN loans l ON l.member_id = m.id
+GROUP BY m.full_name;
+
+-- Extra analytics
+-- Monthly loans (YYYY-MM)
+SELECT strftime('%Y-%m', loan_date) AS month, COUNT(*) AS loans
+FROM loans
+GROUP BY month
+ORDER BY month;
+
+-- Top genres by loans
+SELECT b.genre, COUNT(*) AS loans
+FROM loans l
+JOIN books b ON b.id = l.book_id
+GROUP BY b.genre
+ORDER BY loans DESC, b.genre;
