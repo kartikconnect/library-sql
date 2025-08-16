@@ -6,16 +6,29 @@ jobs:
 validate:
 runs-on: ubuntu-latest
 steps:
-- uses: actions/checkout@v4
-- name: Install SQLite
-run: sudo apt-get update && sudo apt-get install -y sqlite3
-- name: Build and seed DB
-run: |
-sqlite3 app.db < sql/01_schema.sql
-sqlite3 app.db < sql/02_seed.sql
-- name: Sanity checks
-run: |
-sqlite3 app.db ".tables"
-sqlite3 app.db "SELECT COUNT(*) FROM authors;"
-- name: Run saved queries (non-blocking)
-run: sqlite3 app.db < sql/03_queries.sql || true
+- name: Checkout
+uses: actions/checkout@v4
+  - name: Install SQLite
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y sqlite3
+
+  - name: Build and seed DB
+    shell: bash
+    run: |
+      set -euo pipefail
+      sqlite3 app.db < sql/01_schema.sql
+      sqlite3 app.db < sql/02_seed.sql
+
+  - name: Sanity checks
+    shell: bash
+    run: |
+      set -euo pipefail
+      sqlite3 app.db ".tables"
+      sqlite3 app.db "SELECT COUNT(*) FROM authors;"
+
+  - name: Run saved queries (non-blocking)
+    shell: bash
+    run: |
+      set -euo pipefail
+      sqlite3 app.db < sql/03_queries.sql || true
