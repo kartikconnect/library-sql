@@ -2,10 +2,16 @@ name: SQLite CI
 
 on:
   push:
+  pull_request:
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: echo "SQLite CI minimal sanity"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install SQLite
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqlite3
