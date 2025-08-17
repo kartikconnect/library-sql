@@ -1,9 +1,11 @@
 name: SQLite CI
+
 on:
-push:
+  push:
+
 jobs:
-validate:
-runs-on: ubuntu-latest
-steps:
-- uses: actions/checkout@v4
-- run: echo "SQLite CI minimal sanity"
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "SQLite CI minimal sanity"
