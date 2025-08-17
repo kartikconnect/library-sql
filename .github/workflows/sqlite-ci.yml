@@ -2,16 +2,37 @@ name: SQLite CI
 
 on:
   push:
+    branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
 
 jobs:
-  validate:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Install SQLite
+        run: sudo apt-get install -y sqlite3
+
+      - name: Create Database
         run: |
-          sudo apt-get update
-          sudo apt-get install -y sqlite3
+          sqlite3 library.db "CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, title TEXT, author TEXT);"
+
+      - name: Insert Sample Data
+        run: |
+          sqlite3 library.db "INSERT INTO books (title, author) VALUES ('Python Basics', 'Guido');"
+          sqlite3 library.db "INSERT INTO books (title, author) VALUES ('Learning SQL', 'Alan');"
+
+      - name: Run Test - Count Books
+        run: |
+          count=$(sqlite3 library.db "SELECT COUNT(*) FROM books;")
+          echo "Book Count: $count"
+          if [ "$count" -lt 2 ]; then
+            echo "❌ Test failed: Not enough books in database"
+            exit 1
+          else
+            echo "✅ Test passed: $count books found"
+          fi
